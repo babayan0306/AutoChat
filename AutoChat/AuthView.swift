@@ -13,13 +13,17 @@ struct RegisterReducer: Reducer {
     struct State: Equatable {
         var emailText = ""
         var passwordText = ""
+        var confirmPassword = ""
         var secureBtn = false
+        var createAccaunt = false
     }
     
     enum Action: Equatable {
         case emailChange(String)
         case passwordTextChange(String)
+        case passwordConfirm(String)
         case secureChange
+        case accauntCreate
     }
     
     func reduce(into state: inout State, action: Action) -> ComposableArchitecture.Effect<Action> {
@@ -34,6 +38,14 @@ struct RegisterReducer: Reducer {
             
         case .secureChange:
             state.secureBtn.toggle()
+            return .none
+            
+        case .passwordConfirm(let newCnfPass):
+            state.confirmPassword = newCnfPass
+            return .none
+            
+        case .accauntCreate:
+            state.createAccaunt.toggle()
             return .none
         }
     }
@@ -50,23 +62,35 @@ struct AuthView: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 10) {
                         HStack {
-                            Text("Log In")
-                                .font(.system(size: 55))
+                            Text(viewStore.createAccaunt ? "Create an Accaunt" : "Log In")
+                                .font(.system(size: viewStore.createAccaunt ? 45 : 55))
                                 .fontWeight(.heavy)
                                 .foregroundColor(Color("custYello"))
+                            
+                            Spacer()
+                            
+                            if viewStore.createAccaunt {
+                                Image(systemName: "person")
+                                    .foregroundColor(Color("custYello"))
+                                    .font(.system(size: 55))
+                                    .padding(20)
+                                    .background(Color("textFieldViewBlue"))
+                                    .clipShape(Circle())
+                            }
                         }
                         
-                        Text("Sign in to continue")
-                            .font(.title)
-                            .fontWeight(.medium)
-                            .foregroundColor(.gray.opacity(0.5))
+                        if !viewStore.createAccaunt {
+                            Text("Sign in to continue")
+                                .font(.title)
+                                .fontWeight(.medium)
+                                .foregroundColor(.gray.opacity(0.5))
+                        }
                     }
                     .padding(.horizontal, 30)
                     Spacer()
                 }
                 
                 VStack {
-                    
                     TextField(
                         "",
                         text: viewStore.binding(
@@ -155,7 +179,7 @@ struct AuthView: View {
                             .fontWeight(.bold)
                             .padding(.vertical, 8)
                             .onTapGesture {
-                                //
+                                viewStore.send(.accauntCreate)
                             }
                         
                     }
@@ -171,6 +195,7 @@ struct AuthView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color("custBlue"))
+            .animation(Animation.easeInOut(duration: 0.3))
         }
     }
 }
